@@ -1,0 +1,305 @@
+from tkinter import *
+from tkinter import messagebox
+import time
+
+try:
+    import cPickle as pickle
+except ModuleNotFoundError:
+    import pickle
+
+sucesso = None
+
+
+class LojadeItens:
+
+    def __init__(self):
+        self.sucessorecente = None
+        self.catalogo = []
+        self.resgatados = []
+        self.topresgates = {}
+
+    def catalogar(self, codigo):
+
+        positivascat = 0
+        positivasres = 0
+        itemencontrado = False
+
+        if len(self.catalogo) == 0 and len(self.resgatados) == 0:
+            self.sucessorecente = True
+            self.catalogo.append(codigo)
+
+        else:
+            for i in self.catalogo:
+                if i.codigoitem != codigo.codigoitem.upper():
+                    positivascat += 1
+                else:
+                    itemencontrado = True
+
+            if itemencontrado is False and len(self.resgatados) > 0:
+                for i in self.resgatados:
+                    if i[2] != codigo.codigoitem.upper():
+                        positivasres += 1
+                    else:
+                        itemencontrado = True
+
+            if itemencontrado is False and positivascat == len(self.catalogo) and positivasres == len(self.resgatados):
+                self.catalogo.append(codigo)
+                self.sucessorecente = True
+            else:
+                self.sucessorecente = False
+
+    def resgatar(self, itemdesejado, comprador):
+        itemdesejei = getattr(itemdesejado, 'upper')()
+        negativas = 0
+        itemencontrado = None
+        for i in self.catalogo:
+            if i.nomeitem.upper() == itemdesejei and itemencontrado is not False:
+                self.recente = i.codigoitem
+                registro = [comprador, i.nomeitem, i.codigoitem]
+                itemencontrado = True
+                self.recente = i.codigoitem
+                self.resgatados.append(registro)
+                self.catalogo.remove(i)
+                for i in self.topresgates:
+                    if i == comprador:
+                        numeroresgates = self.topresgates[comprador] + 1
+                        self.topresgates = {**self.topresgates, comprador: numeroresgates}
+                else:
+                    self.topresgates.update({comprador: 1})
+            else:
+                negativas += 1
+                if negativas == len(self.catalogo):
+                    itemencontrado = False
+                    self.sucessorecente = False
+        self.sucessorecente = True
+
+    def deletar(self):
+        self.sucessorecente = None
+        self.catalogo = []
+        self.resgatados = []
+        self.topresgates = {}
+
+    def renomear(self, antigonome, novonome):
+        if antigonome in self.topresgates:
+            self.topresgates = {**self.topresgates, novonome: self.topresgates[antigonome]}
+            self.topresgates.pop(antigonome)
+            for i in self.resgatados:
+                if i[0] == antigonome:
+                    i[0] = novonome
+            self.sucessorecente = True
+        else:
+            self.sucessorecente = False
+
+
+class ItemLoja:
+
+    def __init__(self, nome, codigo):
+        self.nomeitem = nome.capitalize()
+        self.codigoitem = codigo.upper()
+
+
+# Funcionamento do programa
+root = Tk()
+root.iconbitmap("anch.ico")
+root.title('Gerenciador de Keys')
+root.geometry('300x175')
+
+
+def popup_reg():
+    confirmRegistro.pack_forget()
+    confirmacao = messagebox.askquestion('E aí?', 'Tudo certo? Pode registrar?', icon='error')
+    if confirmacao == 'yes':
+        confirmar_registro()
+        confirmRegistro.pack_forget()
+        input1.pack_forget()
+        input2.pack_forget()
+    else:
+        input1.pack_forget()
+        input2.pack_forget()
+        initial_state()
+
+
+def registrando():
+    botaoRegistro.pack_forget()
+    botaoResgate.pack_forget()
+    botaoListas.pack_forget()
+    botaoRenomear.pack_forget()
+    botaoApagar.pack_forget()
+    input1.insert(0, 'Nome do item')
+    input1.pack()
+    input2.insert(0, 'Código do item')
+    input2.pack()
+    confirmRegistro.pack()
+
+
+def confirmar_registro():
+    nomeitem = str(input1.get())
+    codigoitem = str(input2.get())
+    brawlhalla = pickle.load(open('storage.pkl', 'rb'))
+    objeto = ItemLoja(nomeitem, codigoitem)
+    brawlhalla.catalogar(objeto)
+    pickle.dump(brawlhalla, open('storage.pkl', 'wb'))
+    resultado_registro()
+
+
+def resultado_registro():
+    brawlhalla = pickle.load(open('storage.pkl', 'rb'))
+    if brawlhalla.sucessorecente:
+        messagebox.showwarning('Registro', 'Item registrado com sucesso', icon='error')
+        initial_state()
+    elif not brawlhalla.sucessorecente:
+        messagebox.showwarning('Registro', 'Código repetido! Item não foi registrado.', icon='error')
+        initial_state()
+
+
+def ver_listas():
+    catalogo = ''
+    resgatados = ''
+    brawlhalla = pickle.load(open('storage.pkl', 'rb'))
+    botaoRegistro.pack_forget()
+    botaoResgate.pack_forget()
+    botaoListas.pack_forget()
+    botaoRenomear.pack_forget()
+    botaoApagar.pack_forget()
+    for i in brawlhalla.catalogo:
+        itemcatalogo = '[' + str(i.nomeitem) + ', ' + str(i.codigoitem) + '] | '
+        catalogo = catalogo + itemcatalogo
+    for i in brawlhalla.resgatados:
+        itemresgate = '[' + str(i[0]) + ', ' + str(i[1]) + ', ' + str(i[2]) + '] | '
+        resgatados = resgatados + itemresgate
+    listas = 'Catalogo: ' + catalogo[:-2] + '\n\n' + 'Resgates: ' + resgatados[:-2] + '\n\n' + (
+            'Resgates por pessoa: ' + str(brawlhalla.topresgates))
+    messagebox.showwarning('As listas', listas, icon='error')
+    initial_state()
+
+
+def popup_res():
+    confirmResgate.pack_forget()
+    confirmacao = messagebox.askquestion('E aí?', 'Tudo certo? Pode resgatar?', icon='error')
+    if confirmacao == 'yes':
+        confirmar_resgate()
+    else:
+        input1.pack_forget()
+        input2.pack_forget()
+        initial_state()
+
+
+def resgatando():
+    botaoRegistro.pack_forget()
+    botaoResgate.pack_forget()
+    botaoListas.pack_forget()
+    botaoRenomear.pack_forget()
+    botaoApagar.pack_forget()
+    input1.insert(0, 'Nome do item')
+    input1.pack()
+    input2.insert(0, 'Quem comprou')
+    input2.pack()
+    confirmResgate.pack()
+
+
+def confirmar_resgate():
+    brawlhalla = pickle.load(open('storage.pkl', 'rb'))
+    input2.pack_forget()
+    input1.pack_forget()
+    brawlhalla.resgatar(input1.get(), input2.get())
+    pickle.dump(brawlhalla, open('storage.pkl', 'wb'))
+    resultado_resgate()
+
+
+def resultado_resgate():
+    brawlhalla = pickle.load(open('storage.pkl', 'rb'))
+    if brawlhalla.sucessorecente:
+        mensagem = 'Item resgatado com sucesso! Entregar para:' + input2.get() + '\n A key do item está no seu CTRL+V'
+        messagebox.showinfo('Resgate', mensagem, icon='error')
+        codigoresultado = brawlhalla.resgatados[-1][-1]
+        root.clipboard_clear()
+        root.clipboard_append(codigoresultado)
+        initial_state()
+    elif brawlhalla.sucessorecente is False:
+        messagebox.showwarning('Registro', 'Item não foi achado!', icon='error')
+        initial_state()
+
+
+def confirmar_renomear():
+    brawlhalla = pickle.load(open('storage.pkl', 'rb'))
+    nomeantigo = str(input1.get())
+    nomenovo = str(input2.get())
+    print(nomeantigo)
+    print(nomenovo)
+    brawlhalla.renomear(nomeantigo, nomenovo)
+    pickle.dump(brawlhalla, open('storage.pkl', 'wb'))
+    input1.pack_forget()
+    input2.pack_forget()
+    initial_state()
+
+
+def popup_ren():
+    confirmRenomear.pack_forget()
+    confirmacao = messagebox.askquestion('E aí?', 'Tudo certo? Pode renomear?', icon='error')
+    if confirmacao == 'yes':
+        confirmar_renomear()
+    else:
+        input1.pack_forget()
+        input2.pack_forget()
+        initial_state()
+
+
+def renomeando():
+    botaoRegistro.pack_forget()
+    botaoResgate.pack_forget()
+    botaoListas.pack_forget()
+    botaoRenomear.pack_forget()
+    botaoApagar.pack_forget()
+    input1.insert(0, 'Nome antigo')
+    input2.insert(0, 'Nome novo')
+    input1.pack()
+    input2.pack()
+    confirmRenomear.pack()
+
+
+def apagando():
+    brawlhalla = pickle.load(open('storage.pkl', 'rb'))
+    botaoRegistro.pack_forget()
+    botaoResgate.pack_forget()
+    botaoListas.pack_forget()
+    botaoRenomear.pack_forget()
+    botaoApagar.pack_forget()
+    aviso = messagebox.askquestion('O código', 'Não tem volta depois dessa', icon='warning')
+    if aviso == 'yes':
+        brawlhalla.deletar()
+        pickle.dump(brawlhalla, open('storage.pkl', 'wb'))
+    initial_state()
+
+
+def initial_state():
+    try:
+        pickle.load(open('storage.pkl', 'rb'))
+    except EOFError:
+        brawlhalla = LojadeItens()
+        pickle.dump(brawlhalla, open('storage.pkl', 'wb'))
+    except FileNotFoundError:
+        with open('storage.pkl', 'w') as f:
+            brawlhalla = LojadeItens()
+            pickle.dump(brawlhalla, open('storage.pkl', 'wb'))
+    input1.delete(0, END)
+    input2.delete(0, END)
+    botaoRegistro.pack()
+    botaoResgate.pack()
+    botaoListas.pack()
+    botaoRenomear.pack()
+    botaoApagar.pack()
+
+
+confirmResgate = Button(root, text='CONFIRMAR', command=popup_res)
+confirmRenomear = Button(root, text='CONFIRMAR', command=popup_ren)
+confirmRegistro = Button(root, text='CONFIRMAR', command=popup_reg)
+input1 = Entry(root)
+input2 = Entry(root)
+botaoRegistro = Button(root, text='REGISTRAR', command=registrando)
+botaoResgate = Button(root, text='RESGATAR', command=resgatando)
+botaoApagar = Button(root, text='APAGAR', command=apagando)
+botaoListas = Button(root, text='VER LISTAS', command=ver_listas)
+botaoRenomear = Button(root, text='RENOMEAR USUARIO', command=renomeando)
+
+initial_state()
+root.mainloop()
