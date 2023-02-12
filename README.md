@@ -2,7 +2,7 @@
 
 -> Introdução
 
-Esse é um programa que ajuda na organização e gerenciamento de keys (itens) de jogos. E foi feito como uma alternativa mais prática ao bloco de notas e similares.
+Esse é um programa que ajuda na organização e gerenciamento de keys (itens) de jogos. E foi feito como uma alternativa que busca ser mais prática que o uso do bloco de notas e similares.
 
 -> Funções
 
