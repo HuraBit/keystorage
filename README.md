@@ -6,11 +6,11 @@ Esse é um programa que ajuda na organização e gerenciamento de keys (itens) d
 
 -> Funções
 
-Primeiramente, o programa tentará criar/ler dados salvos no arquivo "storage.pkl", caso este arquivo não esteja presente, o programa não irá funcionar.
+Primeiramente, o programa tentará criar/ler dados salvos no arquivo "storage.pkl", caso este arquivo não esteja presente, o programa tentará criá-lo.
 
 Na tela inicial, são apresentadas 5 opções ao usuário:
 
-REGISTRAR - Tenta registrar um item, recebe nome e código. Caso o código já esteja salvo, o registro será cancelado e o usuário voltará para a tela inicial.
+REGISTRAR - Tenta guardar um item, recebe nome e código. Caso o código já esteja salvo, o registro será cancelado e o usuário voltará para a tela inicial.
 
 RESGATAR - Tenta resgatar um item buscando pelo seu nome, também recebe o nome do comprador. Caso não haja item com o nome inserido, o resgate irá falhar e o usuário voltará para a tela inicial. Caso tenha sucesso, o código irá para o seu CTRL+V e os dados da ação serão salvos nas abas RESGATES e TOP RESGATES.
 
